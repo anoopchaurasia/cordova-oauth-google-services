@@ -17,7 +17,7 @@ public class OauthGoogleServices extends CordovaPlugin {
     private static final String TAG = "OauthGoogleServices";
     private static final int REQUEST_CODE_EMAIL = 1;
     private static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
-    private static final int REQUEST_AUTHORIZATION = 2;
+    private static final int REQUEST_AUTHORIZATION = 20000;
     private static final String KEY_AUTH_TOKEN = "authtoken";
     private static final String PROFILE_SCOPE = "https://www.googleapis.com/auth/plus.me";
     private CallbackContext _callbackContext = null;
@@ -29,7 +29,8 @@ public class OauthGoogleServices extends CordovaPlugin {
         cordova.setActivityResultCallback(this);
         if (action.equals("getToken")) {
             _callbackContext = callbackContext;
-            scope = "oauth2:" + ("null".equals(args.getString(0)) ? PROFILE_SCOPE: args.getString(0));
+            scope =  "oauth2:server:client_id:" + "925235058960-2u5bbq3dgbmegsi7rdlg2jd3mds0uvk9.apps.googleusercontent.com";
+            scope = scope + ":api_scope:" + ("null".equals(args.getString(0)) ? PROFILE_SCOPE: args.getString(0));
             Runnable runnable = new Runnable() {
                 public void run() {
                     try {
@@ -49,12 +50,21 @@ public class OauthGoogleServices extends CordovaPlugin {
             };
             cordova.getActivity().runOnUiThread(runnable);
             return true;
+        } 
+        else if (action.equals("clearToken")) {
+            try {
+                GoogleAuthUtil.clearToken(cordova.getActivity(), args.getString(0));
+                _callbackContext.success("success");
+            } catch (Exception e) {
+                _callbackContext.error("erro");
+            }
         }
         return false;
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.e(TAG, "requestCode:" + requestCode);
         if (_callbackContext != null) {
             try {
                 if (requestCode == REQUEST_CODE_PICK_ACCOUNT) {
@@ -69,6 +79,7 @@ public class OauthGoogleServices extends CordovaPlugin {
                     if (resultCode == Activity.RESULT_OK) {
                         String token = data.getStringExtra(KEY_AUTH_TOKEN);
                         _callbackContext.success(token);
+                        Log.e(TAG, "UserRecoverableAuthException: Attempting recovery..." + token);
                     } else {
                         _callbackContext.error("plugin failed to get token");
                     }
@@ -86,6 +97,7 @@ public class OauthGoogleServices extends CordovaPlugin {
     }
 
     private void getToken(final String accountName) {
+        final CordovaPlugin plugin = this;
         Runnable runnable = new Runnable() {
             public void run() {
                 String token;
@@ -96,7 +108,18 @@ public class OauthGoogleServices extends CordovaPlugin {
                     _callbackContext.success(token);
                 } catch (UserRecoverableAuthException userRecoverableException) {
                     Log.e(TAG, "UserRecoverableAuthException: Attempting recovery...");
-                    cordova.getActivity().startActivityForResult(userRecoverableException.getIntent(), REQUEST_AUTHORIZATION);
+                    final Intent intent = userRecoverableException.getIntent();
+                    try {
+                        cordova.getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                cordova.startActivityForResult(plugin, intent, REQUEST_AUTHORIZATION);
+                            }
+                        });
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 } catch (Exception e) {
                     Log.i(TAG, "error" + e.getMessage());
                     _callbackContext.error("plugin failed to get token: " + e.getMessage());
