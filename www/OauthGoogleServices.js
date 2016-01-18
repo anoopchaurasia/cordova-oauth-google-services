@@ -1,4 +1,4 @@
-/*global cordova, module*/
+cordova.define("ca.bleathem.plugin.OauthGoogleServices.OauthGoogleServices", function(require, exports, module) { /*global cordova, module*/
 
 function parseArguments(args) {
     var options = {};
@@ -50,5 +50,18 @@ module.exports = {
                 options.err(error);
             }
         }, "OauthGoogleServices", "getToken", [options.scope]);
+    },
+    clearToken: function (token, cb, ecb) {
+        window.cordova.exec(
+            function (response) {
+                console.log(response);
+                cb && cb();
+            },
+            function (error) {
+                console.log("The clearToken call failed with the error: ");
+                console.error(error);
+                ecb && ecb();
+            }, "OauthGoogleServices", "clearToken", [token]);
+        }
     }
-}
+});
