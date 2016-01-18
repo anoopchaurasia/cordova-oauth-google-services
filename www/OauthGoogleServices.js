@@ -1,4 +1,4 @@
-cordova.define("ca.bleathem.plugin.OauthGoogleServices.OauthGoogleServices", function(require, exports, module) { /*global cordova, module*/
+/*global cordova, module*/
 
 function parseArguments(args) {
     var options = {};
@@ -64,4 +64,4 @@ module.exports = {
             }, "OauthGoogleServices", "clearToken", [token]);
         }
     }
-});
+
