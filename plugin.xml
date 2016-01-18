@@ -25,6 +25,5 @@
                 <param name="android-package" value="ca.bleathem.plugin.OauthGoogleServices"/>
             </feature>
         </config-file>
-        <dependency id="com.google.playservices"/>
     </platform>
 </plugin>
